@@ -3,50 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Swiftgo Courier Logistics</title>
+    <title>Swiftgo Courier | Live Tracking</title>
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background-color: #f4f7f9; padding-bottom: 80px; }
-        header { background-color: #002d62; color: white; padding: 40px 20px; text-align: center; border-bottom: 5px solid #ffcc00; }
-        .hero { background: white; padding: 40px 20px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .card { max-width: 450px; margin: 30px auto; padding: 30px; background: white; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        input, button { width: 100%; padding: 15px; margin: 10px 0; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; font-size: 16px; }
-        button { background-color: #002d62; color: white; font-weight: bold; border: none; cursor: pointer; }
-        .whatsapp-float { position: fixed; width: 70px; height: 70px; bottom: 25px; right: 25px; background-color: #25d366; color: white; border-radius: 50px; text-align: center; box-shadow: 2px 5px 15px rgba(0,0,0,0.3); z-index: 1000; display: flex; align-items: center; justify-content: center; text-decoration: none; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f4f7f9; text-align: center; }
+        header { background: #002d62; color: white; padding: 40px 20px; border-bottom: 5px solid #ffcc00; }
+        .container { max-width: 400px; margin: 40px auto; padding: 30px; background: white; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+        input { width: 100%; padding: 15px; margin: 15px 0; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; background: #002d62; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; }
+        .footer { margin-top: 50px; color: #888; font-size: 12px; }
     </style>
 </head>
 <body>
 
-<a href="https://wa.me/YOUR_NUMBER" class="whatsapp-float" target="_blank">
-    <strong>CHAT</strong>
-</a>
-
 <header>
     <h1>SWIFTGO COURIER</h1>
-    <p>Global Shipping Brokerage</p>
+    <p>Global Shipping Brokerage Portal</p>
 </header>
 
-<div class="hero">
-    <h2>Track Shipment</h2>
-    <input type="text" id="trackNum" placeholder="Enter ID (Try: ISFI-99)">
-    <button onclick="handleTrack()">TRACK NOW</button>
+<div class="container">
+    <h2 style="color:#002d62;">Track Shipment</h2>
+    <p style="font-size: 14px; color: #666;">Enter your Tracking ID to see live status</p>
+    <input type="text" id="trackID" placeholder="Enter ID (e.g. ISFI-99)">
+    <button onclick="startTracking()">TRACK NOW</button>
 </div>
 
-<div class="card">
-    <h2>Request a Quote</h2>
-    <input type="text" id="origin" placeholder="From (Country)">
-    <input type="text" id="dest" placeholder="To (Country)">
-    <button style="background-color: #ffcc00; color: #002d62;" onclick="alert('Quote Request Sent!')">GET RATE</button>
+<div class="footer">
+    &copy; 2026 Swiftgo Courier Logistics
 </div>
 
 <script>
-    function handleTrack() {
-        const num = document.getElementById('trackNum').value.trim().toUpperCase();
-        if(num === "ISFI-99") {
-            alert("✅ SHIPMENT LOCATED\n\nID: ISFI-99\nRoute: Israel 🇮🇱 → Finland 🇫🇮\nStatus: IN TRANSIT 🚚✈️\nLocation: Ben Gurion Airport\n\nContact WhatsApp for PDF Waybill.");
-        } else if(num === "") {
-            alert("Please enter a Tracking ID.");
-        } else {
-            alert("ID: " + num + "\nStatus: Processing.\nContact support for GPS updates.");
+    async function startTracking() {
+        const userCode = document.getElementById('trackID').value.trim().toUpperCase();
+        if(!userCode) return alert("Please enter a Tracking ID.");
+
+        // This is your live Google Sheets link
+        const sheetUrl = 'https://docs.google.com/spreadsheets/d/1-P-sXNrBMv7d1L64YS54223w3Ine-JwN7RQDUv0rWIs/gviz/tq?tqx=out:csv';
+
+        try {
+            const response = await fetch(sheetUrl);
+            const csvText = await response.text();
+            
+            // Clean up the Google Sheets formatting
+            const rows = csvText.split('\n').map(row => 
+                row.split(',').map(cell => cell.replace(/"/g, '').trim())
+            );
+
+            let found = false;
+            for(let i = 1; i < rows.length; i++) {
+                if(rows[i][0] && rows[i][0].toUpperCase() === userCode) {
+                    alert("✅ SHIPMENT LOCATED\n\n" +
+                          "ID: " + rows[i][0] + "\n" +
+                          "Route: " + rows[i][1] + "\n" +
+                          "Status: " + rows[i][2] + "\n" +
+                          "Current Location: " + rows[i][3] + "\n\n" +
+                          "For full GPS history and waybill documents, please contact Swiftgo via WhatsApp.");
+                    found = true;
+                    break;
+                }
+            }
+
+            if(!found) {
+                alert("ID: " + userCode + "\nStatus: Processing.\n\nNote: New shipments can take up to 2 hours to appear. Please contact support if this is urgent.");
+            }
+
+        } catch (error) {
+            alert("System update in progress. Please try again in 60 seconds.");
         }
     }
 </script>
